@@ -56,7 +56,9 @@
 
 
             this.context.strokeStyle = 'white';
-            this.context.fillStyle = lander.crashed ? 'red': 'black';
+            this.context.fillStyle = 'black';
+            if (lander.landed) { this.context.fillStyle = 'green'; }
+            if (lander.crashed) { this.context.fillStyle = 'red'; }
 
             // Nose cone
             this.context.beginPath();
