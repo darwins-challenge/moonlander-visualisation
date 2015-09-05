@@ -32,16 +32,20 @@
     View.prototype.showLander = function() {
         var lander = this.model.lander;
         var overshoot = Math.PI/3;
-        this.context.save();
-        this.context.strokeStyle = 'white';
-        this.context.beginPath();
-        this.context.arc(
-            lander.x, lander.y, lander.radius,
-            0 -overshoot - lander.orientation,
-            Math.PI + overshoot - lander.orientation
-        );
-        this.context.closePath();
-        this.context.stroke();
-        this.context.restore();
+        [-1, 0, 1].map(function(multiplier){
+            return multiplier * this.canvas.width;
+        }.bind(this)).forEach(function(offset){
+            this.context.save();
+            this.context.strokeStyle = 'white';
+            this.context.beginPath();
+            this.context.arc(
+                lander.x + offset, lander.y, lander.radius,
+                0 -overshoot - lander.orientation,
+                Math.PI + overshoot - lander.orientation
+            );
+            this.context.closePath();
+            this.context.stroke();
+            this.context.restore();
+        }.bind(this));
     }
 })(window.lander = window.lander || {});
