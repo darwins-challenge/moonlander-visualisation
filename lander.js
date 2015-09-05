@@ -56,11 +56,11 @@
         var fuel = lander.fuel || 0;
 
         var right = this.canvas.width - 10;
-        var top = 10;
+        var top = this.canvas.height - 5;
 
         this.context.save();
         this.context.fillStyle = '#c791db';
-        this.context.fillRect(right - fuel, top, fuel, 10);
+        this.context.fillRect(right - fuel * 2, top - 20, fuel * 2, 15);
         this.context.restore();
 
     };
