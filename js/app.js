@@ -19,5 +19,10 @@
         "horizon": horizon
     };
 
-    new lander.View(model, display);
+    var view = new lander.View(model, display);
+    function tick(){
+        view.update();
+        requestAnimationFrame(tick);
+    };
+    tick();
 })(lander);
