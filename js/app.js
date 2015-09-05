@@ -16,7 +16,8 @@
             "radius": 10,
             "fuel": 100,
             "thrusting": true,
-            "crashed": false
+            "crashed": false,
+            "landed": false
         },
         "horizon": horizon
     };
