@@ -37,6 +37,7 @@
         }.bind(this)).forEach(function(offset){
             this.context.save();
             this.context.strokeStyle = 'white';
+            this.context.fillStyle = lander.crashed ? 'red': 'blank';
             this.context.beginPath();
             this.context.arc(
                 lander.x + offset, lander.y, lander.radius,
@@ -44,6 +45,7 @@
                 Math.PI + overshoot - lander.orientation
             );
             this.context.closePath();
+            this.context.fill();
             this.context.stroke();
             this.context.restore();
         }.bind(this));
