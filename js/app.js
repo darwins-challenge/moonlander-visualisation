@@ -15,6 +15,7 @@
             "orientation": Math.PI/4, "angular-velocity": 0.05,
             "radius": 10,
             "fuel": 100,
+            "thrusting": true,
             "crashed": false
         },
         "horizon": horizon

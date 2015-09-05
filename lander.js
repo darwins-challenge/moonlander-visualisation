@@ -37,17 +37,47 @@
             return multiplier * this.canvas.width;
         }.bind(this)).forEach(function(offset){
             this.context.save();
+            this.context.translate(offset + lander.x, lander.y);
+            this.context.rotate(-lander.orientation);
+
+            if (lander.thrusting) {
+                this.context.fillStyle = 'yellow';
+
+                var t = new Date().getTime();
+                var r = (t / 2) % 2 ? 1.8 : 2.1;
+
+                this.context.beginPath();
+                this.context.moveTo(offset, -r * lander.radius);
+                this.context.lineTo(offset + 0.8 * lander.radius, 0.3 * lander.radius);
+                this.context.lineTo(offset - 0.8 * lander.radius, 0.3 * lander.radius);
+                this.context.closePath();
+                this.context.fill();
+            }
+
+
             this.context.strokeStyle = 'white';
-            this.context.fillStyle = lander.crashed ? 'red': 'blank';
+            this.context.fillStyle = lander.crashed ? 'red': 'black';
+
+            // Nose cone
+            this.context.beginPath();
+            this.context.moveTo(offset - lander.radius, lander.radius * 0.3);
+            this.context.lineTo(offset, lander.radius * 2);
+            this.context.lineTo(offset + lander.radius, lander.radius * 0.3);
+            this.context.closePath();
+            this.context.fill();
+            this.context.stroke();
+
+            // Circle body
             this.context.beginPath();
             this.context.arc(
-                lander.x + offset, lander.y, lander.radius,
-                0 -overshoot - lander.orientation,
-                Math.PI + overshoot - lander.orientation
+                offset, 0, lander.radius,
+                0 - overshoot,
+                Math.PI + overshoot
             );
             this.context.closePath();
             this.context.fill();
             this.context.stroke();
+
             this.context.restore();
         }.bind(this));
     };
