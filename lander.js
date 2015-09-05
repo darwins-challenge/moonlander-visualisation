@@ -38,7 +38,7 @@
         }.bind(this)).forEach(function(offset){
             this.context.save();
             this.context.translate(offset + lander.x, lander.y);
-            this.context.rotate(-lander.orientation);
+            this.context.rotate(lander.orientation);
 
             if (lander.thrusting) {
                 this.context.fillStyle = 'yellow';
