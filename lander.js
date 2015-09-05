@@ -10,6 +10,7 @@
     View.prototype.update = function(){
 	this.clearDisplay();
 	this.showHorizon();
+	this.showLander();
     };
     View.prototype.clearDisplay = function(){
 	var width = this.canvas.width;
@@ -28,4 +29,15 @@
 	this.context.stroke();
 	this.context.restore();
     };
+    View.prototype.showLander = function() {
+	var lander = this.model.lander;
+	var overshoot = Math.PI/3;
+	this.context.save();
+	this.context.strokeStyle = 'white';
+	this.context.beginPath();
+	this.context.arc(lander.x, lander.y, lander.radius, -overshoot, Math.PI + overshoot);
+	this.context.closePath();
+	this.context.stroke();
+	this.context.restore();
+    }
 })(window.lander = window.lander || {});
