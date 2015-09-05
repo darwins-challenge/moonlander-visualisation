@@ -1,0 +1,24 @@
+{
+  "name": "moonlander-visualisation",
+  "version": "1.0.0",
+  "homepage": "https://github.com/darwins-challenge/moonlander-visualisation",
+  "authors": [
+    "dvberkel <daan.v.berkel.1980@gmail.com>"
+  ],
+  "description": "Canvas based moonlander visualisation",
+  "main": "lander.js",
+  "keywords": [
+    "moon",
+    "lander"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "index.html",
+    "js"
+  ]
+}
