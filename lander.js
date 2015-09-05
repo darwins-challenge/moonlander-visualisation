@@ -47,22 +47,21 @@
                 var r = (t / 2) % 2 ? 1.8 : 2.1;
 
                 this.context.beginPath();
-                this.context.moveTo(offset, -r * lander.radius);
-                this.context.lineTo(offset + 0.8 * lander.radius, 0.3 * lander.radius);
-                this.context.lineTo(offset - 0.8 * lander.radius, 0.3 * lander.radius);
+                this.context.moveTo(0, -r * lander.radius);
+                this.context.lineTo(0 + 0.8 * lander.radius, 0.3 * lander.radius);
+                this.context.lineTo(0 - 0.8 * lander.radius, 0.3 * lander.radius);
                 this.context.closePath();
                 this.context.fill();
             }
-
 
             this.context.strokeStyle = 'white';
             this.context.fillStyle = lander.crashed ? 'red': 'black';
 
             // Nose cone
             this.context.beginPath();
-            this.context.moveTo(offset - lander.radius, lander.radius * 0.3);
-            this.context.lineTo(offset, lander.radius * 2);
-            this.context.lineTo(offset + lander.radius, lander.radius * 0.3);
+            this.context.moveTo(0 - lander.radius, lander.radius * 0.3);
+            this.context.lineTo(0, lander.radius * 2);
+            this.context.lineTo(0 + lander.radius, lander.radius * 0.3);
             this.context.closePath();
             this.context.fill();
             this.context.stroke();
@@ -70,7 +69,7 @@
             // Circle body
             this.context.beginPath();
             this.context.arc(
-                offset, 0, lander.radius,
+                0, 0, lander.radius,
                 0 - overshoot,
                 Math.PI + overshoot
             );
