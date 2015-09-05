@@ -3,8 +3,9 @@
 
     var display = document.getElementById('display');
     var horizon = new Array(display.width);
-    for (var index = 0; index < display.width; index++){
-	horizon[index] = 0;
+    horizon[0] = 50;
+    for (var index = 1; index < display.width; index++){
+	horizon[index] = horizon[index - 1] + 2 * (Math.random() - 0.5);
     }
 
 
