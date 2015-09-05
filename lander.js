@@ -11,6 +11,7 @@
         this.clearDisplay();
         this.showHorizon();
         this.showLander();
+        this.showFuel();
     };
     View.prototype.clearDisplay = function(){
         var width = this.canvas.width;
@@ -49,5 +50,18 @@
             this.context.stroke();
             this.context.restore();
         }.bind(this));
-    }
+    };
+    View.prototype.showFuel = function() {
+        var lander = this.model.lander;
+        var fuel = lander.fuel || 0;
+
+        var right = this.canvas.width - 10;
+        var top = 10;
+
+        this.context.save();
+        this.context.fillStyle = '#c791db';
+        this.context.fillRect(right - fuel, top, fuel, 10);
+        this.context.restore();
+
+    };
 })(window.lander = window.lander || {});
