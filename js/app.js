@@ -12,7 +12,7 @@
         "lander": {
             "x": 37, "y": 251,
             "vx": 0, "vy": 0,
-            "orientation": 0, "angular-velocity": 0,
+            "orientation": Math.PI/4, "angular-velocity": 0,
             "radius": 10,
             "fuel": 1
         },

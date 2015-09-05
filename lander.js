@@ -36,7 +36,9 @@
         this.context.strokeStyle = 'white';
         this.context.beginPath();
         this.context.arc(
-            lander.x, lander.y, lander.radius, -overshoot, Math.PI + overshoot
+            lander.x, lander.y, lander.radius,
+            0 -overshoot - lander.orientation,
+            Math.PI + overshoot - lander.orientation
         );
         this.context.closePath();
         this.context.stroke();
