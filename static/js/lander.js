@@ -9,8 +9,15 @@
     };
     View.prototype.update = function(){
         this.clearDisplay();
+
+        // Apply some transformations that nicely center the lander on the
+        // screen.
+        this.context.save();
+        this.context.translate(this.canvas.width / 2, 50);
         this.showHorizon();
         this.showLander();
+        this.context.restore();
+
         this.showFuel();
     };
     View.prototype.clearDisplay = function(){
@@ -23,10 +30,8 @@
         this.context.save();
         this.context.strokeStyle = 'white';
         this.context.beginPath();
-        this.context.moveTo(0, this.model.horizon[0]);
-        this.model.horizon.forEach(function(height, index){
-            this.context.lineTo(index, height);
-        }.bind(this));
+        this.context.moveTo(-this.canvas.width / 2, 0);
+        this.context.lineTo(this.canvas.width / 2, 0);
         this.context.stroke();
         this.context.restore();
     };

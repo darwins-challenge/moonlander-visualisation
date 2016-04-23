@@ -1,0 +1,13 @@
+[package]
+name = "moonvis"
+version = "0.1.0"
+authors = ["Rico Huijbers <rix0rrr@gmail.com>"]
+
+[dependencies]
+iron = "0.3.*"
+staticfile = "*"
+mount = "*"
+env_logger = "*"
+log = "*"
+glob = "*"
+rustc-serialize = "*"
