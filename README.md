@@ -17,6 +17,8 @@ Run the web server (you need some JSON files in these directories):
 
     cargo run /path/to/trace/files
 
+You could use the `traces` directory, it contains sample traces.
+
 Then open in the browser:
 
     http://localhost:8080/
