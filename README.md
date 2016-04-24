@@ -1,3 +1,4 @@
+
 # moonlander-visualisation
 Canvas based moonlander visualisation, using a Rust program to drive the web
 server and the menu.
@@ -6,7 +7,6 @@ server and the menu.
 
 First install the JavaScript front-end packages:
 
-    cd static
     bower install
 
 Build the web server:
