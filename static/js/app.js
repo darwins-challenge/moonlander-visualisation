@@ -13,7 +13,7 @@
             "thrusting": false,
             "crashed": false,
             "landed": false
-        },
+        }
     };
 
     function copyTraceFrameToModel(frame, lander) {
@@ -55,7 +55,7 @@
                 currentTrace = trace;
                 frame = 0;
             }
-        }
+        };
     }());
 
     //----------------------------------------------------------------------
