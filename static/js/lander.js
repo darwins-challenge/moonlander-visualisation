@@ -38,11 +38,14 @@
     View.prototype.showLander = function() {
         var lander = this.model.lander;
         var overshoot = Math.PI/3;
+        // Draw it 3 times so that if the landers goes out the sides, it looks
+        // like it wraps.
         [-1, 0, 1].map(function(multiplier){
             return multiplier * this.canvas.width;
         }.bind(this)).forEach(function(offset){
             this.context.save();
-            this.context.translate(offset + lander.x, lander.y);
+            var trans_y = lander.y + lander.radius; // Make the lander's bottom appear at 0
+            this.context.translate(offset + lander.x, trans_y);
             this.context.rotate(lander.orientation);
 
             if (lander.thrusting) {
