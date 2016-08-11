@@ -36,6 +36,7 @@
 
         var frame = 0;
         var currentTrace = [];
+        var timer = 0;
 
         function tick(){
             if (frame < currentTrace.length) {
@@ -46,20 +47,25 @@
             }
             view.update();
             frame++;
-            requestAnimationFrame(tick);
+            timer = requestAnimationFrame(tick);
         };
-        tick();
 
         return {
             play: function(trace) {
                 currentTrace = trace;
                 frame = 0;
+                if (!timer) timer = requestAnimationFrame(tick);
+            },
+            stop: function() {
+                cancelAnimationFrame(timer);
+                timer = 0;
             }
         };
     }());
 
     //----------------------------------------------------------------------
     //  File integration
+    /*
     $(function() {
         var selected = null;
 
@@ -100,5 +106,120 @@
 
         $('#refresh-btn').click(refreshFiles);
     });
+    */
 
+    // Live running
+    (function() {
+        var activeProgram;
+        var nextLine = 0;
+        var timer;
+        var traces = [];
+
+        // trace = {
+        //    generation: int
+        //    program: program_node
+        //    score_card: {
+        //          _field0: [ [ name, score ]],
+        //          _field1: int total score,
+        //          _field2: { states: [ { state } ] }
+        //    }
+        // }
+        // program_node = { "variant", "fields" }
+
+        function selectTrace(t) {
+            trace.play(t.score_card._field2.states);
+            renderScoreTable($('#score-table'), t.score_card._field0);
+            $('#program-pane').html(htmlifyProgram(t.program));
+        };
+
+        var traceList = ItemList($('#generation-list'), function(t) { return 'Gen ' + t.generation }, selectTrace);
+
+        $('#start-btn').click(function() {
+            stopLoadTraces();
+            $.getJSON('/d/start', function(response) {
+                if (response.id) {
+                    activeProgram = response.id;
+                    nextLine = 0;
+                    traces = [];
+                    scheduleLoadTraces();
+                } else
+                    alert('Whoopsie, error starting program');
+            });
+        });
+
+        $('#stop-btn').click(function() {
+            stopLoadTraces();
+            trace.stop();
+            $.getJSON('/d/stop', function(response) {
+            });
+        });
+
+        function loadTraces() {
+            $.getJSON('/d/' + activeProgram + '/' + nextLine, function(response) {
+                nextLine = response.next_line;
+                if (response.lines) {
+                    var ls = response.lines;
+                    for (var i = 0; i < ls.length; i++) {
+                        traces.push(JSON.parse(ls[i]));
+                    };
+                    traceList.update(traces);
+                }
+            });
+            scheduleLoadTraces();
+        }
+
+        function scheduleLoadTraces() {
+            timer = setTimeout(loadTraces, 1000);
+        }
+
+        function stopLoadTraces() {
+            clearTimeout(timer);
+        }
+    }());
+
+    function renderScoreTable(el, rows) {
+        rows.sort(function(a, b) { return b[1] - a[1]; });
+        el.empty().append($.map(rows, function(x) {
+            return $('<tr>').append(
+                $('<td>', { text: x[0] }),
+                $('<td>', { text: humanNum(x[1]) }));
+        }));
+    }
+
+    /**
+     * Selectable item list
+     */
+    function ItemList(el, caption_fn, select_fn) {
+        var _items;
+        var _selected;
+
+        function select(i, item_el) {
+            el.find('.active').removeClass('active');
+            _selected = i;
+            item_el.addClass('active');
+
+            select_fn(_items[_selected]);
+        }
+
+        return {
+            update: function(items) {
+                _items = items;
+
+                el.empty().append($.map(_items, function(x, i) {
+                    var item = $('<a>', {
+                        href: '#',
+                        class: 'list-group-item ' + (i == _selected ? 'active': ''),
+                        text: caption_fn(x),
+                    });
+
+                    item.click(function() {
+                        select(i, item);
+                        return false;
+                    });
+
+                    return item;
+                }));
+            }
+        };
+    }
 })(lander);
