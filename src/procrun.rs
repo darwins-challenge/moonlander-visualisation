@@ -105,7 +105,11 @@ impl ProcessRunner {
                     }
                 }
 
-                let _ = child.kill();
+                if let Some(err) = child.kill().err() {
+                    println!("Error killing subprocess: {}", err);
+                } else {
+                    println!("Subprocess stopped");
+                }
             }
         });
 

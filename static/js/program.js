@@ -29,8 +29,9 @@ var htmlifyProgram = (function() {
     }
 
     function renderUnknown(node) {
+        if (node == "True") return mkLit("true")(node);
+        if (node == "False") return mkLit("false")(node);
         return JSON.stringify(node);
-        return '(' + node.variant + ' ' + node.fields.map(render).join(' ') + ')';
     }
 
     function renderIf(node) {
@@ -60,6 +61,9 @@ var htmlifyProgram = (function() {
         And: mkBinOp('&and;'),
         Or: mkBinOp('&or;'),
         Not: mkUnOp('&not;'),
+
+        True: mkLit('true'),
+        False: mkLit('false'),
     };
 
     function render(program) {

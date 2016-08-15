@@ -132,7 +132,9 @@
             $('#program-pane').html(htmlifyProgram(t.program));
         };
 
-        var traceList = ItemList($('#generation-list'), function(t) { return 'Gen ' + t.generation }, selectTrace);
+        var traceList = ItemList($('#generation-list'), function(t) {
+            return ['Gen ' + t.generation, t.score_card._field1.toFixed(0)];
+        }, selectTrace);
 
         $('#start-btn').click(function() {
             stopLoadTraces();
@@ -206,11 +208,14 @@
                 _items = items;
 
                 el.empty().append($.map(_items, function(x, i) {
+                    var caption = caption_fn(x);
+
                     var item = $('<a>', {
                         href: '#',
                         class: 'list-group-item ' + (i == _selected ? 'active': ''),
-                        text: caption_fn(x),
-                    });
+                    }).append(
+                        $('<span>', { text: caption[0] }),
+                        $('<span>', { text: caption[1], css: { float: 'right', textAlign: 'right', fontSize: '8pt' }}));
 
                     item.click(function() {
                         select(i, item);
