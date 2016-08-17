@@ -6,3 +6,15 @@
    max-height: 500px;
    overflow-y: scroll;
 }
+
+#generation-list > a > span:first-child {
+    padding-left: 1ex
+}
+
+#generation-list > .unsuccessful::before {
+    content: "✘"
+}
+
+#generation-list > .successful::before {
+    content: "✔"
+}
