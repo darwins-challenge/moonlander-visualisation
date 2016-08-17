@@ -211,13 +211,14 @@
 
                     var isSuccesfull = x.score_card._field0[6][1] > 0;
                     var item = $('<a>', {
-                        href: '#',
-                        class: 'list-group-item' +
-                            (i == _selected ? ' active': '') +
-                            (isSuccesfull ? ' succesfull': ' unsuccesfull')
+                        href: '#'
                     }).append(
                         $('<span>', { text: caption[0] }),
                         $('<span>', { text: caption[1], css: { float: 'right', textAlign: 'right', fontSize: '8pt' }}));
+
+                    item.addClass('list-group-item');
+                    item.addClass(isSuccesfull ? 'successful': 'unsuccessful');
+                    if (i == _selected) { item.addClass('active'); }
 
                     item.click(function() {
                         select(i, item);
