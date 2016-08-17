@@ -1,5 +1,4 @@
 ;(function(lander){
-    console.log('Moon Lander Visualisation');
 
     var display = document.getElementById('display');
 
@@ -210,9 +209,12 @@
                 el.empty().append($.map(_items, function(x, i) {
                     var caption = caption_fn(x);
 
+                    var isSuccesfull = x.score_card._field0[6][1] > 0;
                     var item = $('<a>', {
                         href: '#',
-                        class: 'list-group-item ' + (i == _selected ? 'active': ''),
+                        class: 'list-group-item' +
+                            (i == _selected ? ' active': '') +
+                            (isSuccesfull ? ' succesfull': ' unsuccesfull')
                     }).append(
                         $('<span>', { text: caption[0] }),
                         $('<span>', { text: caption[1], css: { float: 'right', textAlign: 'right', fontSize: '8pt' }}));
