@@ -11,7 +11,8 @@
             "radius": 10,
             "fuel": 100,
             "thrusting": false,
-            "crashed": false,
+            "hit_ground": false,
+            "crash_speed": 0.0,
             "landed": false
         }
     };
@@ -24,7 +25,8 @@
         lander.orientation = frame.o;
         lander.fuel = frame.fuel * 100;
         lander.thrusting = frame.thrusting;
-        lander.crashed = frame.crashed;
+        lander.hit_ground = frame.hit_ground;
+        lander.crash_speed = frame.crash_speed;
         lander.landed = frame.landed;
     }
 
