@@ -11,7 +11,7 @@ use rustc_serialize::json;
 use rand::Rng;
 use rand;
 
-use std::sync::{Mutex, RwLock, Barrier, Arc};
+use std::sync::{Mutex, RwLock, Arc};
 use std::thread;
 use std::io::{BufReader, BufRead};
 
@@ -34,11 +34,8 @@ struct RunnerState {
     /// The output of the current process
     output: RwLock<Vec<String>>,
 
-    /// Barrier used to check if starting the subprocess (owned by a thread) went ok
-    start_barrier: Barrier,
-
-    /// Any error
-    error: Mutex<Option<Result<(), ::std::io::Error>>>
+    /// Handle to the child process
+    child: Mutex<Option<process::Child>>
 }
 
 pub struct ProcessRunner {
@@ -53,8 +50,7 @@ impl ProcessRunner {
             state: Arc::new(RunnerState {
                 id: Mutex::new("".to_owned()),
                 output: RwLock::new(vec![]),
-                start_barrier: Barrier::new(2),
-                error: Mutex::new(None)
+                child: Mutex::new(None)
             })
         }
     }
@@ -67,61 +63,47 @@ impl ProcessRunner {
         let state = self.state.clone();
         let program = self.program.clone();
 
+        let mut child = try!(process::Command::new(&program)
+                .stdout(process::Stdio::piped())
+                .spawn());
+
+        let out = child.stdout.take().expect("No stdout on child");
+
+        *state.child.lock().unwrap() = Some(child);
+
         thread::spawn(move || {
-            let child_result = process::Command::new(&program)
-                    .stdout(process::Stdio::piped())
-                    .spawn();
-            if child_result.is_err() {
+            let mut reader = BufReader::new(out);
+            let mut s = String::new();
+            loop {
                 {
-                    *state.error.lock().unwrap() = Some(child_result.map(|_| ()));
+                    if *state.id.lock().unwrap() != id { break; } // End of the party boys, ID changed
                 }
-                state.start_barrier.wait();
-                return;
-            }
 
-            {
-                *state.error.lock().unwrap() = Some(Ok(()));
-            }
-            state.start_barrier.wait();
+                match reader.read_line(&mut s) {
+                    Ok(n) if n > 0 => (),
+                    _ => break
+                };
 
-            if let Ok(mut child) = child_result {
                 {
-                    let mut reader = BufReader::new(child.stdout.as_mut().unwrap());
-                    let mut s = String::new();
-                    loop {
-                        {
-                            if *state.id.lock().unwrap() != id { break; } // End of the party boys, ID changed
-                        }
-
-                        match reader.read_line(&mut s) {
-                            Ok(n) if n > 0 => (),
-                            _ => break
-                        };
-
-                        {
-                            state.output.write().unwrap().push(s.clone());
-                        }
-                        s.clear();
-                    }
+                    state.output.write().unwrap().push(s.clone());
                 }
-
-                if let Some(err) = child.kill().err() {
-                    println!("Error killing subprocess: {}", err);
-                } else {
-                    println!("Subprocess stopped");
-                }
+                s.clear();
             }
         });
 
-        self.state.start_barrier.wait();
-        {
-            self.state.error.lock().unwrap().take().unwrap()
-        }
+        Ok(())
     }
 
     fn stop(&self) -> Result<(), Box<Error>> {
         // This will cause the background thread to terminate
         self.state.id.lock().unwrap().clear();
+        for child in self.state.child.lock().unwrap().iter_mut() {
+            if let Some(err) = child.kill().err() {
+                println!("Error killing subprocess: {}", err);
+            } else {
+                println!("Subprocess stopped");
+            }
+        }
         Ok(())
     }
 
