@@ -22,7 +22,8 @@
         "static/bower_components",
         "src",
         "traces",
-        "target"
+        "target",
+        "Cargo.*"
     ],
     "dependencies": {
         "bootstrap": "^3.3.6",
