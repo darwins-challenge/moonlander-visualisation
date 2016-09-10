@@ -20,13 +20,50 @@
 
     <div class="container">
       <div class="row">
+        <div class="col-xs-12">
+          <div class="alert alert-danger" role="alert" id="errors" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
         <div class="col-xs-3">
-          <h2>Evolutions</h2>
-          <button type="button" class="btn btn-success" id="start-btn">Start evolution</button>
-          <button type="button" class="btn btn-danger" id="stop-btn">Stop</button>
-          <br><br>
+          <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;" id="src-tabs">
+              <li role="presentation" class="active"><a href="#run" role="tab" data-toggle="tab">Run</a></li>
+              <li role="presentation"><a href="#load" role="tab" data-toggle="tab">Load trace</a></li>
+              <li role="presentation"><a href="#paste" role="tab" data-toggle="tab">Paste</a></li>
+          </ul>
+
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="run">
+              <div id="run-file-selector"></div>
+              <div id="run-buttons">
+                  <button type="button" class="btn btn-primary" id="start-btn">Start evolution</button>
+                  <button type="button" class="btn btn-default stop-btn">Stop</button>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="load">
+              <div id="load-file-selector"></div>
+              <div id="load-buttons">
+                  <button type="button" class="btn btn-primary" id="load-btn">Load</button>
+                  <button type="button" class="btn btn-default stop-btn">Stop</button>
+              </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="paste">
+              <textarea class="form-control" rows="5" id="pasted-trace" style="margin-bottom: 1em;"></textarea>
+              <div id="load-buttons">
+                  <button type="button" class="btn btn-primary" id="load-paste-btn">Load</button>
+                  <button type="button" class="btn btn-default stop-btn">Stop</button>
+              </div>
+            </div>
+          </div>
+
+          <hr><br>
 
           <div id="generation-list" class="list-group left-pane"></div>
+          <button id="generation-copy-btn" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-copy"></span> Copy to clipboard</button>
+
           <!--
           <div id="file-list" class="list-group"></div>
           <div class="pull-right">
@@ -35,7 +72,6 @@
           -->
         </div>
         <div class="col-xs-8">
-          <h2>Display</h2>
           <canvas id="display" width="640" height="480" style="background: url(images/background.jpg);"></canvas>
 
           <div class="row">
@@ -64,6 +100,9 @@
     </div>
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="js/ItemList.js"></script>
+    <script src="js/FileSelector.js"></script>
     <script src="js/lander.js"></script>
     <script src="js/program.js"></script>
     <script src="js/app.js"></script>

@@ -25,26 +25,25 @@ use mount::Mount;
 
 
 fn run_server<H>(handler: H) -> Result<(), Box<Error>> where H: Handler + Send + Sync {
-    let mut mount = Mount::new();
-    mount.mount("/d", handler);
-    mount.mount("/", Static::new(Path::new("./static/")));
-
     // Listener has drop
-    let _ = try!(Iron::new(mount).http(("localhost", 8080)));
+    let _ = try!(Iron::new(handler).http(("localhost", 8080)));
     Ok(())
 }
 
 fn main() {
     env_logger::init().unwrap();
     if env::args().len() < 2 {
-        println!("Usage: moonvis TRACE_DIRECTORY");
+        println!("Usage: moonvis DIRECTORY");
         process::exit(1);
     }
 
     let directory = env::args().nth(1).unwrap();
-    //let handler = dirlist::DirectoryLister { directory: directory };
-    let handler = procrun::ProcessRunner::new(directory);
+
+    let mut mount = Mount::new();
+    mount.mount("/api/load", dirlist::DirectoryLister { directory: directory.to_owned() });
+    mount.mount("/api/run", procrun::ProcessRunner::new(directory.to_owned()));
+    mount.mount("/", Static::new(Path::new("./static/")));
 
     println!("Running on http://localhost:8080/");
-    run_server(handler).expect("Something went wrong");
+    run_server(mount).expect("Something went wrong");
 }

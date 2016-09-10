@@ -16,6 +16,11 @@
         }
     };
 
+    function showError(e) {
+        var el = $('#errors');
+        el.show().text(el.text() + '\n' + e);
+    }
+
     function copyTraceFrameToModel(frame, lander) {
         lander.x = frame.x;
         // Some scaling on the coordinates so there's more usable space on
@@ -39,6 +44,14 @@
         var currentTrace = [];
         var timer = 0;
 
+        var copyBtn = $('#generation-copy-btn').click(function() {
+            var as_text = $.map(traceList.getItems(), function(t) {
+                return JSON.stringify(t);
+            }).join('\n');
+            $('#pasted-trace').val(as_text);
+            $('#src-tabs a[href="#paste"]').tab('show')
+        }).hide();
+
         function tick(){
             if (frame < currentTrace.length) {
                 copyTraceFrameToModel(currentTrace[frame], model.lander);
@@ -51,70 +64,11 @@
             timer = requestAnimationFrame(tick);
         };
 
-        return {
-            play: function(trace) {
-                currentTrace = trace;
-                frame = 0;
-                if (!timer) timer = requestAnimationFrame(tick);
-            },
-            stop: function() {
-                cancelAnimationFrame(timer);
-                timer = 0;
-            }
+        function selectTrace(t) {
+            trace.play(t.score_card._field2.states);
+            renderScoreTable($('#score-table'), t.score_card._field0);
+            $('#program-pane').html(htmlifyProgram(t.program));
         };
-    }());
-
-    //----------------------------------------------------------------------
-    //  File integration
-    /*
-    $(function() {
-        var selected = null;
-
-        function select(f) {
-            $('#file-list').find('a:contains("' + selected + '")').removeClass('active');
-            selected = f;
-            $('#file-list').find('a:contains("' + selected + '")').addClass('active');
-        }
-
-        function play(fname) {
-            $.getJSON("/d/" + fname, function(contents) {
-                trace.play(contents);
-            });
-        }
-
-        function refreshFiles() {
-            $.getJSON("/d", function(files) {
-                console.log("Found ", files.length, " files");
-                $('#file-list').empty().append($.map(files, function(f) {
-                    return $('<a>', {
-                        href: '#',
-                        class: 'list-group-item',
-                        text: f,
-                        click: function() {
-                            select(f);
-                            play(f);
-                            return false;
-                        }
-                    });
-                }));
-                select(selected);
-            });
-        }
-
-        // Start the file list loader
-        window.setInterval(refreshFiles, 10000);
-        refreshFiles();
-
-        $('#refresh-btn').click(refreshFiles);
-    });
-    */
-
-    // Live running
-    (function() {
-        var activeProgram;
-        var nextLine = 0;
-        var timer;
-        var traces = [];
 
         // trace = {
         //    generation: int
@@ -127,57 +81,134 @@
         // }
         // program_node = { "variant", "fields" }
 
-        function selectTrace(t) {
-            trace.play(t.score_card._field2.states);
-            renderScoreTable($('#score-table'), t.score_card._field0);
-            $('#program-pane').html(htmlifyProgram(t.program));
-        };
 
         var traceList = ItemList($('#generation-list'), function(t) {
-            return ['Gen ' + t.generation, t.score_card._field1.toFixed(0)];
+            // Determine captions for generations
+            var frames = t.score_card._field2.states;
+            return [
+                'Gen ' + t.generation,
+                t.score_card._field1.toFixed(0),
+                frames[frames.length-1].landed ? 'successful': 'unsuccessful'
+                ];
         }, selectTrace);
+
+
+        return {
+            play: function(trace) {
+                currentTrace = trace;
+                frame = 0;
+                if (!timer) timer = requestAnimationFrame(tick);
+            },
+            stop: function() {
+                cancelAnimationFrame(timer);
+                timer = 0;
+            },
+            setTraces: function(traces) {
+                traceList.update(traces);
+                copyBtn.toggle(traces != null && traces.length > 0);
+            },
+            loadFromText: function(contents) {
+                var lines = contents.split('\n');
+                var traces = [];
+                for (var i = 0; i < lines.length; i++) {
+                    try {
+                        traces.push(JSON.parse(lines[i]));
+                    } catch (e) {
+                        if (e instanceof SyntaxError)
+                            continue;
+                        throw e;
+                    }
+                };
+                traceList.update(traces);
+                copyBtn.toggle(traces != null && traces.length > 0);
+            }
+        };
+
+    }());
+
+    //----------------------------------------------------------------------
+    //  Load traces from disk
+    $(function() {
+        var runFs = FileSelector($('#load-file-selector'), '/api/load/list', showError).select(function(f) {
+            $('#load-buttons').toggle(f != null);
+        });
+
+        $('#load-btn').click(function() {
+            load(runFs.getSelection().join('/'));
+        });
+
+        function load(filename) {
+            $.get("/api/load/get/" + filename, function(contents) {
+                trace.loadFromText(contents);
+            });
+        }
+    });
+
+    //----------------------------------------------------------------------
+    //  Load traces from pasteboard
+    $(function() {
+        $('#load-paste-btn').click(function() {
+            trace.loadFromText($('#pasted-trace').val());
+        });
+    });
+
+    //----------------------------------------------------------------------
+    //  Load trace from live running program
+    (function() {
+        var activeProgram;
+        var nextLine = 0;
+        var timer;
+        var traces = [];
+
+        var runFs = FileSelector($('#run-file-selector'), '/api/run/list', showError).select(function(f) {
+            $('#run-buttons').toggle(f != null);
+        });
 
         $('#start-btn').click(function() {
             stopLoadTraces();
-            $.getJSON('/d/start', function(response) {
+            $.getJSON('/api/run/start/' + runFs.getSelection().join('/'), function(response) {
                 if (response.id) {
                     activeProgram = response.id;
                     nextLine = 0;
                     traces = [];
                     scheduleLoadTraces();
                 } else
-                    alert('Whoopsie, error starting program');
+                    showError('Whoopsie, error starting program');
             });
         });
 
-        $('#stop-btn').click(function() {
+        $('.stop-btn').click(function() {
             stopLoadTraces();
             trace.stop();
-            $.getJSON('/d/stop', function(response) {
+            $.getJSON('/api/run/stop', function(response) {
             });
         });
 
+        /**
+         * Periodically try to load new traces from the live program
+         */
         function loadTraces() {
-            $.getJSON('/d/' + activeProgram + '/' + nextLine, function(response) {
-                nextLine = response.next_line;
-                if (response.lines) {
-                    var ls = response.lines;
-                    for (var i = 0; i < ls.length; i++) {
-                        traces.push(JSON.parse(ls[i]));
-                    };
-                    traceList.update(traces);
+            $.getJSON('/api/run/get/' + activeProgram + '/' + nextLine).then(function(response) {
+                try {
+                    nextLine = response.next_line;
+                    if (response.lines) {
+                        var ls = response.lines;
+                        for (var i = 0; i < ls.length; i++) {
+                            traces.push(JSON.parse(ls[i]));
+                        };
+                        trace.setTraces(traces);
+                    }
+                } catch (e) {
+                    showError(e);
                 }
+            }).fail(function(jqxhr, textStatus, error) {
+                showError(textStatus + ', ' + error);
             });
             scheduleLoadTraces();
         }
 
-        function scheduleLoadTraces() {
-            timer = setTimeout(loadTraces, 1000);
-        }
-
-        function stopLoadTraces() {
-            clearTimeout(timer);
-        }
+        function scheduleLoadTraces() { timer = setTimeout(loadTraces, 1000); }
+        function stopLoadTraces() { clearTimeout(timer); }
     }());
 
     function renderScoreTable(el, rows) {
@@ -189,47 +220,4 @@
         }));
     }
 
-    /**
-     * Selectable item list
-     */
-    function ItemList(el, caption_fn, select_fn) {
-        var _items;
-        var _selected;
-
-        function select(i, item_el) {
-            el.find('.active').removeClass('active');
-            _selected = i;
-            item_el.addClass('active');
-
-            select_fn(_items[_selected]);
-        }
-
-        return {
-            update: function(items) {
-                _items = items;
-
-                el.empty().append($.map(_items, function(x, i) {
-                    var caption = caption_fn(x);
-
-                    var isSuccesfull = x.score_card._field0[6][1] > 0;
-                    var item = $('<a>', {
-                        href: '#'
-                    }).append(
-                        $('<span>', { text: caption[0] }),
-                        $('<span>', { text: caption[1], css: { float: 'right', textAlign: 'right', fontSize: '8pt' }}));
-
-                    item.addClass('list-group-item');
-                    item.addClass(isSuccesfull ? 'successful': 'unsuccessful');
-                    if (i == _selected) { item.addClass('active'); }
-
-                    item.click(function() {
-                        select(i, item);
-                        return false;
-                    });
-
-                    return item;
-                }));
-            }
-        };
-    }
 })(lander);

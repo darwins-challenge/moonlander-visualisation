@@ -4,9 +4,9 @@ use iron::status;
 use std::process;
 use std::error::Error;
 
-use std::ffi::OsString;
+use std::ffi::{OsString,OsStr};
 
-use rustc_serialize::json;
+use rustc_serialize::{json,Encodable};
 
 use rand::Rng;
 use rand;
@@ -14,6 +14,7 @@ use rand;
 use std::sync::{Mutex, RwLock, Arc};
 use std::thread;
 use std::io::{BufReader, BufRead};
+use dirlist::{FileType, list_executables};
 
 #[derive(Debug,RustcDecodable,RustcEncodable,Clone,PartialEq)]
 struct StartSuccessful {
@@ -39,14 +40,14 @@ struct RunnerState {
 }
 
 pub struct ProcessRunner {
-    pub program: OsString,
+    pub directory: OsString,
     state: Arc<RunnerState>
 }
 
 impl ProcessRunner {
     pub fn new<S: Into<String>>(s: S) -> ProcessRunner {
         ProcessRunner {
-            program: OsString::from(s.into()),
+            directory: OsString::from(s.into()),
             state: Arc::new(RunnerState {
                 id: Mutex::new("".to_owned()),
                 output: RwLock::new(vec![]),
@@ -55,15 +56,16 @@ impl ProcessRunner {
         }
     }
 
-    fn start(&self) -> Result<(), ::std::io::Error> {
+    fn start(&self, program: &OsStr) -> Result<(), ::std::io::Error> {
         let id : String = rand::thread_rng().gen_ascii_chars().take(10).collect();
         *self.state.id.lock().unwrap() = id.clone();
         self.state.output.write().unwrap().clear();
 
         let state = self.state.clone();
-        let program = self.program.clone();
 
-        let mut child = try!(process::Command::new(&program)
+        println!("Starting {}", program.to_str().unwrap_or("?"));
+
+        let mut child = try!(process::Command::new(program)
                 .stdout(process::Stdio::piped())
                 .spawn());
 
@@ -99,9 +101,9 @@ impl ProcessRunner {
         self.state.id.lock().unwrap().clear();
         for child in self.state.child.lock().unwrap().iter_mut() {
             if let Some(err) = child.kill().err() {
-                println!("Error killing subprocess: {}", err);
+                error!("Error killing subprocess: {}", err);
             } else {
-                println!("Subprocess stopped");
+                warn!("Subprocess stopped");
             }
         }
         Ok(())
@@ -124,18 +126,23 @@ impl ProcessRunner {
         Ok("ok".to_owned())
     }
 
-    fn do_start(&self) -> Result<String, Box<Error>> {
+    fn do_start(&self, path_parts: &[String]) -> Result<StartSuccessful, Box<Error>> {
         try!(self.stop());
-        try!(self.start());
-        let response = StartSuccessful { id: self.state.id.lock().unwrap().clone() };
-        Ok(try!(json::encode(&response)))
+        let full_path = self.directory.clone().into_string().unwrap() + "/" + &path_parts.join("/");
+        try!(self.start(OsStr::new(&full_path)));
+        Ok(StartSuccessful { id: self.state.id.lock().unwrap().clone() })
     }
 
-    fn do_read(&self, id: &str, page: &str) -> Result<String, Box<Error>> {
+    fn do_list(&self, path_parts: &[String]) -> Result<Vec<(FileType, String)>, Box<Error>> {
+        let full_path = self.directory.clone().into_string().unwrap() + "/" + &path_parts.join("/");
+        Ok(try!(list_executables(&full_path)))
+    }
+
+    fn do_read(&self, id: &str, page: &str) -> Result<LogOutput, Box<Error>> {
         let result = self.read(try!(page.parse::<usize>()));
 
         if result.id == id {
-            Ok(try!(json::encode(&result)))
+            Ok(result)
         } else {
             Err(Box::new(ErrString("Incorrect id provided".to_owned())))
         }
@@ -144,25 +151,34 @@ impl ProcessRunner {
 
 impl Handler for ProcessRunner {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        match req.url.path.len() {
-            1 => {
-                match req.url.path[0].as_ref() {
-                    "start" => Ok(make_response(self.do_start())),
-                    "stop" => Ok(make_response(self.do_stop())),
-                    _ => Ok(Response::with((status::BadRequest, "Command must be 'start' or 'stop'")))
+        if req.url.path.len() == 0 {
+            return Ok(Response::with((status::BadRequest, "Need at least a command")))
+        }
+
+        match req.url.path[0].as_ref() {
+            "start" => Ok(make_response(self.do_start(&req.url.path[1..]))),
+            "stop" => Ok(make_response(self.do_stop())),
+            "get" => {
+                if req.url.path.len() == 3 {
+                    Ok(make_response(self.do_read(&req.url.path[1], &req.url.path[2])))
+                } else {
+                    Ok(Response::with((status::BadRequest, "Get needs 2 arguments")))
                 }
             },
-            2 => {
-                Ok(make_response(self.do_read(&req.url.path[0], &req.url.path[1])))
-            },
-            _ => Ok(Response::with((status::BadRequest, "Expecting exactly one URL part")))
+            "list" => Ok(make_response(self.do_list(&req.url.path[1..]))),
+            _ => Ok(Response::with((status::BadRequest, "No such command")))
         }
     }
 }
 
-fn make_response(r: Result<String, Box<Error>>) -> Response {
+fn make_response<E: Encodable>(r: Result<E, Box<Error>>) -> Response {
     match r {
-        Ok(s) => Response::with((status::Ok, s)),
+        Ok(obj) => {
+            match json::encode(&obj) {
+                Ok(s) => Response::with((status::Ok, s)),
+                Err(e) => Response::with((status::InternalServerError, e.description()))
+            }
+        },
         Err(e) => {
             println!("{:?}", e);
             Response::with((status::InternalServerError, e.description()))
