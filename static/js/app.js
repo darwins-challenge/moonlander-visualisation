@@ -41,8 +41,8 @@
 
     function animateViaAnimationFrame() {
         return {
-            schedule: requestAnimationFrame,
-            cancel: cancelAnimationFrame,
+            schedule: function(c) { return requestAnimationFrame(c); },
+            cancel: function(t) { cancelAnimationFrame(t); },
             frames: function(s) { return s * 60 }
         }
     }
@@ -53,7 +53,7 @@
             schedule: function(callback) {
                 return setTimeout(callback, period);
             },
-            cancel: clearTimeout,
+            cancel: function(t) { clearTimeout(t); },
             frames: function(s) { return s * fps }
         }
     }
@@ -64,7 +64,7 @@
         var frame = 0;
         var currentTrace = [];
         var timer = 0;
-        var animator = animateViaTimer(30);
+        var animator = animateViaTimer(45);
 
         var copyBtn = $('#generation-copy-btn').click(function() {
             var as_text = $.map(traceList.getItems(), function(t) {
