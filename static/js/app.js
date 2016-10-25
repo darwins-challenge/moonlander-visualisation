@@ -26,7 +26,7 @@
         lander.x = frame.x;
         // Some scaling on the coordinates so there's more usable space on
         // screen
-        lander.y = frame.y * 2;
+        lander.y = frame.y;
         lander.orientation = frame.o;
         lander.fuel = frame.fuel * 100;
         lander.thrusting = frame.thrusting;
@@ -36,6 +36,7 @@
     }
 
     var view = new lander.View(model, display);
+    window.theView = view; // For manual tests
     view.update();
 
     function animateViaAnimationFrame() {

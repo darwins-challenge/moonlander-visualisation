@@ -1,4 +1,6 @@
 ;(function($){
+    var LANDER_IMAGE_SCALE = 0.3;
+
     var View = $.View = function(model, canvas){
         this.model = model;
         this.canvas = canvas;
@@ -7,6 +9,12 @@
         this.context.scale(1, -1);
         this.update();
     };
+    View.prototype.direct = function(x, y, o) {
+        this.model.lander.x = x;
+        this.model.lander.y = y;
+        this.model.lander.orientation = o || 0;
+        this.update();
+    }
     View.prototype.update = function(){
         this.clearDisplay();
 
@@ -37,55 +45,9 @@
     };
 
     function drawLander(offset, lander, context) {
-        var overshoot = Math.PI/3;
-        var trans_y = lander.y + lander.radius; // Make the lander's bottom appear at 0
-        context.translate(offset + lander.x, trans_y);
-        context.rotate(lander.orientation);
-
-        if (lander.thrusting) {
-            context.fillStyle = 'yellow';
-
-            var t = new Date().getTime();
-            var r = (t / 2) % 2 ? 1.8 : 2.1;
-
-            context.beginPath();
-            context.moveTo(0, -r * lander.radius);
-            context.lineTo(0 + 0.8 * lander.radius, 0.3 * lander.radius);
-            context.lineTo(0 - 0.8 * lander.radius, 0.3 * lander.radius);
-            context.closePath();
-            context.fill();
-        }
-
-        context.strokeStyle = 'white';
-        context.fillStyle = 'black';
-        if (lander.landed) { context.fillStyle = 'green'; }
-        if (lander.crashed) { context.fillStyle = 'red'; }
-
-        // Nose cone
-        context.beginPath();
-        context.moveTo(0 - lander.radius, lander.radius * 0.3);
-        context.lineTo(0, lander.radius * 2);
-        context.lineTo(0 + lander.radius, lander.radius * 0.3);
-        context.closePath();
-        context.fill();
-        context.stroke();
-
-        // Circle body
-        context.beginPath();
-        context.arc(
-            0, 0, lander.radius,
-            0 - overshoot,
-            Math.PI + overshoot
-        );
-        context.closePath();
-        context.fill();
-        context.stroke();
-    }
-
-    function drawLander(offset, lander, context) {
         var src_w = 217;
         var src_h = 280;
-        var scale = 0.3;
+        var scale = LANDER_IMAGE_SCALE; // Scale of lander in image
         var baseline_h = 245;
 
         var dst_w = scale * src_w;
