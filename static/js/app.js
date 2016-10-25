@@ -38,12 +38,32 @@
     var view = new lander.View(model, display);
     view.update();
 
+    function animateViaAnimationFrame() {
+        return {
+            schedule: requestAnimationFrame,
+            cancel: cancelAnimationFrame,
+            frames: function(s) { return s * 60 }
+        }
+    }
+
+    function animateViaTimer(fps) {
+        var period = 1000 / fps;
+        return {
+            schedule: function(callback) {
+                return setTimeout(callback, period);
+            },
+            cancel: clearTimeout,
+            frames: function(s) { return s * fps }
+        }
+    }
+
     var trace = (function() {
-        var WAIT_TIME = 100;
+        var WAIT_TIME_S = 2;
 
         var frame = 0;
         var currentTrace = [];
         var timer = 0;
+        var animator = animateViaTimer(30);
 
         var copyBtn = $('#generation-copy-btn').click(function() {
             var as_text = $.map(traceList.getItems(), function(t) {
@@ -57,12 +77,12 @@
             if (frame < currentTrace.length) {
                 copyTraceFrameToModel(currentTrace[frame], model.lander);
             }
-            if (currentTrace.length + WAIT_TIME < frame) {
+            if (currentTrace.length + animator.frames(WAIT_TIME_S) < frame) {
                 frame = 0;
             }
             view.update();
             frame++;
-            timer = requestAnimationFrame(tick);
+            timer = animator.schedule(tick);
         };
 
         function selectTrace(t) {
@@ -94,10 +114,10 @@
             play: function(trace) {
                 currentTrace = trace;
                 frame = 0;
-                if (!timer) timer = requestAnimationFrame(tick);
+                if (!timer) timer = animator.schedule(tick);
             },
             stop: function() {
-                cancelAnimationFrame(timer);
+                animator.cancel(timer);
                 timer = 0;
             },
             setTraces: function(traces) {
