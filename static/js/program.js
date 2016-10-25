@@ -31,6 +31,7 @@ var htmlifyProgram = (function() {
     function renderUnknown(node) {
         if (node == "True") return mkLit("true")(node);
         if (node == "False") return mkLit("false")(node);
+        if (node == "Thrust" || node == "Skip" || node == "Left" || node == "Right") return mkLit(node)(node);
         return JSON.stringify(node);
     }
 
@@ -40,6 +41,16 @@ var htmlifyProgram = (function() {
             '<span style="display: inline-block; width: 4em; text-align: right;">then</span> ' + render(node.fields[1]) + '<br>' +
             '<span style="display: inline-block; width: 4em; text-align: right;">else</span> ' + render(node.fields[2]) +
             '</div>');
+    }
+
+    function renderList(list) {
+        ret = ["<table class=\"table table-condensed\">"];
+        $.each(list, function(i, item) {
+            ret.push("<tr valign=\"top\"><td>" + render(item[0]) + "</td>");
+            ret.push("<td>&rArr;</td><td>" + render(item[1]) + "</td></tr>");
+        });
+        ret.push("</table>");
+        return ret.join('\n');
     }
 
     var dispatch = {
@@ -67,6 +78,10 @@ var htmlifyProgram = (function() {
     };
 
     function render(program) {
+        if (program === undefined)
+            return "WUT UNDEFINED";
+        if ($.isArray(program))
+            return renderList(program);
         return (dispatch[program.variant] || renderUnknown)(program);
     }
     return render;

@@ -6,7 +6,8 @@
         "lander": {
             "x": 0, "y": 10000,
             "vx": 1, "vy": 0,
-            "orientation": Math.PI/4, "angular-velocity": 0.05,
+            "orientation": Math.PI/4,
+            "angular-velocity": 0.05,
             "radius": 10,
             "fuel": 100,
             "thrusting": false,
@@ -65,33 +66,25 @@
         };
 
         function selectTrace(t) {
-            trace.play(t.score_card._field2.states);
-            renderScoreTable($('#score-table'), t.score_card._field0);
-            $('#program-pane').html(htmlifyProgram(t.program));
+            trace.play(statesFromTrace(t));
+            renderScoreTable($('#score-table'), t.fitness.score_card._field0);
+            $('#program-pane').html(htmlifyProgram(programFromTrace(t)));
         };
 
-        // trace = {
-        //    generation: int
-        //    program: program_node
-        //    score_card: {
-        //          _field0: [ [ name, score ]],
-        //          _field1: int total score,
-        //          _field2: { states: [ { state } ] }
-        //    }
-        // }
-        // program_node = { "variant", "fields" }
-
+        function programFromTrace(t) { return t.program._field0; }
+        function statesFromTrace(t) { return t.fitness.trace; }
+        function generationFromTrace(t) { return t.generation; }
+        function totalScoreFromTrace(t) { return t.fitness.score_card._field1; }
 
         var traceList = ItemList($('#generation-list'), function(t) {
             // Determine captions for generations
-            var frames = t.score_card._field2.states;
+            var frames = statesFromTrace(t);
             return [
-                'Gen ' + t.generation,
-                t.score_card._field1.toFixed(0),
+                'Gen ' + generationFromTrace(t),
+                totalScoreFromTrace(t).toFixed(0),
                 frames[frames.length-1].landed ? 'successful': 'unsuccessful'
                 ];
         }, selectTrace);
-
 
         return {
             play: function(trace) {
