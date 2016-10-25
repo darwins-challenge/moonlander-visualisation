@@ -71,7 +71,11 @@
             $('#program-pane').html(htmlifyProgram(programFromTrace(t)));
         };
 
-        function programFromTrace(t) { return t.program._field0; }
+        function programFromTrace(t) {
+            var program = t.program;
+            if (program._field0) return t.program._field0;
+            return program;
+        }
         function statesFromTrace(t) { return t.fitness.trace; }
         function generationFromTrace(t) { return t.generation; }
         function totalScoreFromTrace(t) { return t.fitness.score_card._field1; }
