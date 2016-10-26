@@ -1,5 +1,5 @@
+# Moonlander visualization program
 
-# moonlander-visualisation
 Canvas based moonlander visualisation, using a Rust program to drive the web
 server and the menu.
 
@@ -9,15 +9,9 @@ First install the JavaScript front-end packages:
 
     bower install
 
-Build the web server:
+Run the web server, pointing it where the trace files are stored:
 
-    cargo build
-
-Run the web server (you need to point it to a compiled evolution program):
-
-    cargo run ../moonlander-ast-rust/target/release/examples/evolve
-
-You could use the `traces` directory, it contains sample traces.
+    cargo run ../moonlander-ast
 
 Then open in the browser:
 
