@@ -28,10 +28,15 @@ var htmlifyProgram = (function() {
         };
     }
 
+    function renderUnknownVariant(node) {
+        return '<span style="font-weight: bold;">' + node.variant + '</span> (' +
+            $.map(node.fields, render).join(', ') + ')';
+    }
+
     function renderUnknown(node) {
-        if (node == "True") return mkLit("true")(node);
-        if (node == "False") return mkLit("false")(node);
-        if (node == "Thrust" || node == "Skip" || node == "Left" || node == "Right") return mkLit(node)(node);
+        if (typeof node === 'string') return mkLit(node)(node);
+        if (node.variant)
+            return renderUnknownVariant(node);
         return JSON.stringify(node);
     }
 
