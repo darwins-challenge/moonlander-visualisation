@@ -1,5 +1,5 @@
 # Moonlander visualization program
-
+**DEPRECATED**: use [genoculars](https://github.com/darwins-challenge/genoculars)
 Canvas based moonlander visualisation, using a Rust program to drive the web
 server and the menu.
 
